@@ -17,13 +17,13 @@ export class CoursesController {
 
   @Get(':id')
   findOne(
-    @Param('id') id: number,
+    @Param('id') id: string,
   ) {
-    return this.coursesService.findOne(Number(id));
+    return this.coursesService.findOne(id);
   }
 
   @Post()
-  create(@Body() createCourseDTO: CreateCourseDTO) {
+  async create(@Body() createCourseDTO: CreateCourseDTO) {
     return this.coursesService.create(createCourseDTO);
   }
 
@@ -33,7 +33,7 @@ export class CoursesController {
     @Body() updateCourseDTO: UpdateCourseDTO,
   ) {
     console.log(updateCourseDTO)
-    return this.coursesService.update(Number(id), updateCourseDTO)
+    return this.coursesService.update(id, updateCourseDTO)
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -41,7 +41,7 @@ export class CoursesController {
   delete(
     @Param('id') id: string,
   ) {
-    return this.coursesService.delete(Number(id));
+    return this.coursesService.delete(id);
   }
 
 }

@@ -1,60 +1,48 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Course } from './entity/courses.entity';
+import { Repository } from 'typeorm';
 
-import coursesMock from '../mocks/courses';
+import { Course } from './entities/courses.entity';
 import { CreateCourseDTO } from './dto/create-course.dto';
-import { randomInt } from 'crypto';
 import { UpdateCourseDTO } from './dto/update-course.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class CoursesService {
-  private courses: Course[] = coursesMock.map(course => ({
-    ...course,
-    created_at: new Date(course.created_at),
-    updated_at: new Date(course.updated_at),
-  }));
 
-  findAll() {
-    return this.courses;
+  constructor(
+    @InjectRepository(Course)
+    private readonly courseRepository: Repository<Course>
+  ) { }
+
+  async findAll() {
+    return this.courseRepository.find()
   }
 
-  findOne(id: number) {
-    const course = this.courses.find(course => course.id === id);
+  async findOne(id: string) {
+    const course = await this.courseRepository.findOne({
+      where: { id },
+    });
     if (!course) throw new NotFoundException(`Course ID ${id} not found`);
     return course;
   }
 
-  create(createCourseDTO: CreateCourseDTO) {
-    const newCourse: Course = {id: randomInt(8000), ...createCourseDTO, created_at: new Date(), updated_at: new Date()};
-    this.courses.push(newCourse)
-    return newCourse;
+  async create(createCourseDTO: CreateCourseDTO) {
+    const courseCreated = this.courseRepository.create(createCourseDTO);
+    return this.courseRepository.save(courseCreated);
   }
 
-  update(id: number, updateCourseDTO: UpdateCourseDTO) {
-    const existingCourse = this.findOne(id);
-    if (existingCourse) {
-      existingCourse.description = updateCourseDTO.description || existingCourse.description;
-      existingCourse.difficulty_level = updateCourseDTO.difficulty_level || existingCourse.difficulty_level;
-      existingCourse.duration_in_hours = updateCourseDTO.duration_in_hours || existingCourse.duration_in_hours;
-      existingCourse.duration_in_hours = updateCourseDTO.duration_in_hours || existingCourse.duration_in_hours;
-      existingCourse.is_active = updateCourseDTO.is_active || existingCourse.is_active;
-      existingCourse.name = updateCourseDTO.name || existingCourse.name;
-      existingCourse.price = updateCourseDTO.price || existingCourse.price;
-      existingCourse.tags = updateCourseDTO.tags || existingCourse.tags;
+  async update(id: string, updateCourseDTO: UpdateCourseDTO) {
+    const course = await this.courseRepository.preload({ ...updateCourseDTO, id })
+    if (!course) throw new NotFoundException(`Course ID ${id} not found`);
 
-      const index = this.courses.findIndex(course => course.id === id)
-      this.courses[index] = {
-        ...existingCourse,
-        updated_at: new Date(),
-      }
-    }
-    return this.findOne(id);
+    return this.courseRepository.save(course);
   }
 
-  delete(id: number) {
-    const index = this.courses.findIndex(course => course.id === id)
-    if (index >= 0) {
-      this.courses.splice(index, 1);
-    }
+  async delete(id: string) {
+    const course = await this.courseRepository.findOne({
+      where: { id },
+    });
+    if (!course) throw new NotFoundException(`Course ID ${id} not found`);
+    return this.courseRepository.remove(course);
   }
 }
