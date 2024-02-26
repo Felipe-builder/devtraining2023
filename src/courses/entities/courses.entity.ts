@@ -12,8 +12,17 @@ export class Course {
   @Column()
   description: string;
   
-  @JoinTable()
-  @ManyToMany(() => Tag, tag => tag.courses, {
+  @JoinTable({
+    name: 'courses_tags',
+    joinColumn: {
+      name: 'courseId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'tagId',
+      referencedColumnName: 'id',
+    },
+  })  @ManyToMany(() => Tag, tag => tag.courses, {
     cascade: true
   })
   tags: Tag[];
