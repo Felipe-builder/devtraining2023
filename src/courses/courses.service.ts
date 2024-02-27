@@ -10,16 +10,14 @@ import { Tag } from './entities/tags.entity';
 @Injectable()
 export class CoursesService {
 
-  constructor(
-    @InjectRepository(Course)
-    private readonly courseRepository: Repository<Course>,
+  @InjectRepository(Course)
+  private readonly courseRepository: Repository<Course>;
 
-    @InjectRepository(Tag)
-    private readonly tagRepository: Repository<Tag>
-  ) { }
+  @InjectRepository(Tag)
+  private readonly tagRepository: Repository<Tag>;
 
   async findAll(): Promise<Course[]> {
-    return this.courseRepository.find({relations: ['tags']})
+    return this.courseRepository.find({ relations: ['tags'] })
   }
 
   async findOne(id: string): Promise<Course> {
@@ -63,7 +61,7 @@ export class CoursesService {
   }
 
   private async preloadTagByName(name: string): Promise<Tag> {
-    const tag = await this.tagRepository.findOne({where: { name }})
+    const tag = await this.tagRepository.findOne({ where: { name } })
     if (tag) return tag;
     return this.tagRepository.create({ name })
   }
